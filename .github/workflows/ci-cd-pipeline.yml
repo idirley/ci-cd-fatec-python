@@ -86,18 +86,40 @@ jobs:
 
       # PASSO 6: Executa a análise e envia resultados
       - name: 📊 Executar Análise CodeQL
+        id: codeql-analyze
         uses: github/codeql-action/analyze@v3
         with:
           category: "/language:python"
-          # Se vulnerabilidades forem encontradas, a pipeline FALHARÁ aqui
           upload: true
-
-      # PASSO 7: Verifica se há alertas críticos
-      - name: ⚠️ Verificar Alertas de Segurança
-        if: always()
+          output: sarif-results
+          
+      # PASSO 7: Verifica vulnerabilidades críticas e falha se encontradas
+      - name: 🚫 Bloquear pipeline se houver vulnerabilidades críticas
         run: |
-          echo "✅ Análise de segurança concluída!"
-          echo "📋 Verifique a aba 'Security' do GitHub para detalhes"
+          echo "🔍 Verificando resultados da análise CodeQL..."
+          
+          # Verifica se existem arquivos SARIF com resultados
+          if [ -d "sarif-results" ]; then
+            # Conta vulnerabilidades high/critical
+            CRITICAL_COUNT=$(find sarif-results -name "*.sarif" -exec jq '[.runs[].results[] | select(.level == "error" or .level == "warning")] | length' {} + 2>/dev/null | awk '{sum+=$1} END {print sum}')
+            
+            if [ ! -z "$CRITICAL_COUNT" ] && [ "$CRITICAL_COUNT" -gt 0 ]; then
+              echo "❌ FALHA: Encontradas $CRITICAL_COUNT vulnerabilidade(s) no código!"
+              echo "🔒 A pipeline será bloqueada para prevenir deploy de código inseguro."
+              echo "📋 Verifique os detalhes em: https://github.com/${{ github.repository }}/security/code-scanning"
+              exit 1
+            else
+              echo "✅ Nenhuma vulnerabilidade crítica encontrada."
+            fi
+          else
+            echo "⚠️ Arquivos SARIF não encontrados. Continuando..."
+          fi
+          
+      - name: ✅ Análise de Segurança Aprovada
+        if: success()
+        run: |
+          echo "✅ Código aprovado na análise de segurança!"
+          echo "📋 Detalhes completos: https://github.com/${{ github.repository }}/security/code-scanning"
 
   # ---------------------------------------------------------------------------
   # JOB 2: TESTES AUTOMATIZADOS
