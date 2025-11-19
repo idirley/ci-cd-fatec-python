@@ -33,7 +33,7 @@ def deletar_usuario_vulneravel():
     conn.close()
     return "Deleted"
 
-# ❌ VULNERÁVEL: SQL Injection via POST data
+# ❌ VULNERÁVEL: SQL Injection via POST. data
 @app.route('/update', methods=['POST'])
 def atualizar_email_vulneravel():
     """SQL Injection via POST body"""
