@@ -253,7 +253,7 @@ jobs:
           echo "============================================"
 
   # ---------------------------------------------------------------------------
-  # JOB 4: DEPLOY PARA prd
+  # JOB 4: DEPLOY PARA prd.
   # ---------------------------------------------------------------------------
   # Realiza o deploy para o ambiente de produção/prd
   # Só executa se CodeQL e testes passarem
