@@ -251,3 +251,66 @@ jobs:
           echo "============================================"
           echo "Verifique os logs acima para detalhes"
           echo "============================================"
+
+  # ---------------------------------------------------------------------------
+  # JOB 4: DEPLOY PARA prd
+  # ---------------------------------------------------------------------------
+  # Realiza o deploy para o ambiente de produção/prd
+  # Só executa se CodeQL e testes passarem
+  deploy-prd:
+    name: 🚀 Deploy para Prd
+    runs-on: ubuntu-latest
+    # IMPORTANTE: Só executa se CodeQL e testes passarem
+    needs: [codeql-analysis, stage]
+    
+    # Define o ambiente GitHub (aparece na UI)
+    environment:
+      name: prd
+      url: https://prd.exemplo.com.br
+    
+    steps:
+      # PASSO 1: Baixa o código
+      - name: 📥 Checkout do código
+        uses: actions/checkout@v4
+
+      # PASSO 2: Configura Python
+      - name: 🐍 Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # PASSO 3: Prepara artefatos para deploy
+      - name: 📦 Preparar artefatos
+        run: |
+          echo "📦 Criando pacote para deploy..."
+          pip install -r requirements.txt
+          echo "✅ Artefatos preparados!"
+
+      # PASSO 4: Simula deploy (substitua com seu processo real)
+      - name: 🚀 Deploy para prd
+        run: |
+          echo "🚀 Iniciando deploy para ambiente de PRD..."
+          echo "📍 Ambiente: Prd"
+          echo "📦 Versão: ${{ github.sha }}"
+          echo "👤 Autor: ${{ github.actor }}"
+          echo ""
+          echo "✅ Deploy realizado com sucesso!"
+          echo "🌐 Aplicação disponível em: https://prd.exemplo.com"
+
+      - name: Commit e push do resultado para o repositório
+        run: |
+          git add resultado/codeql-report.sarif
+          git commit -m "Adiciona resultado CodeQL do deploy PRD"
+          git push  
+        
+      # PASSO 5: Notifica sucesso
+      - name: ✅ Notificar conclusão
+        if: success()
+        run: |
+          echo "============================================"
+          echo "✅ PIPELINE CONCLUÍDA COM SUCESSO!"
+          echo "============================================"
+          echo "🔒 Segurança: Aprovado pelo CodeQL"
+          echo "🧪 Testes: Todos passaram"
+          echo "🚀 Deploy: Realizado em Prd"
+          echo "============================================"
